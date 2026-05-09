@@ -3,13 +3,12 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "preprocesamiento.h"
 using namespace std;
-vector<string> parse_data(const string& line);
-string concat(vector<string>& v1, const string& sep = "");
 
-int main() {
-    ifstream inputFile("wiki_movie_plots_deduped.csv");
-    ofstream outputFile("parsed_data.txt");
+bool process_movie_data(const string& input_filename, const string& output_filename) {
+    ifstream inputFile(input_filename);
+    ofstream outputFile(output_filename);
     string line;
     if (!inputFile.is_open()) {
         cout << "Error opening file" << endl;
@@ -40,7 +39,7 @@ int main() {
     }
     inputFile.close();
     outputFile.close();
-    return 0;
+    return true;
 }
 
 vector<string> parse_data(const string& line) {
