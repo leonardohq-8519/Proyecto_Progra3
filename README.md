@@ -16,9 +16,9 @@ Leonardo Julian Huanay Quiroz
 
 ## Preprocesamiento de datos
 
-Se decidió crear un .txt intermedio donde se almacenarían la data limpia para facilitar la lectura y reducir el tiempo consumido cuando se pase al Trie. El archivo es procesado linea por linea mediante el uso de getline() para evitar tener que almacenar el .csv en un buffer mientras se va operando. Se descarta la fila de los encabezados y se procede a almacenar la data de cada fila siguiente en un vector de strings para posteriormente ser normalizada. 
+Se decidió crear un .txt intermedio donde se almacenarían la data limpia para facilitar la lectura y reducir el tiempo consumido cuando se pase al Trie. En la funcion process_movie_data, el archivo es procesado linea por linea mediante el uso de getline() para evitar tener que almacenar el .csv en un buffer mientras se va operando. Se descarta la fila de los encabezados y se procede a almacenar la data de cada fila siguiente en un vector de strings para posteriormente ser normalizada. 
 
-Mediante parse_data se asegura de que las comas solamente separen los strings cuando no se encuentran entre comillas. La data posteriormente es concatenada en un único string, limpiada de signos de puntuación y espacios duplicados usando concat(), transform(), unique() y erase().
+Mediante parse_data se asegura de que las comas solamente separen los strings cuando no se encuentran entre comillas. La data posteriormente es concatenada en un único string, limpiada de signos de puntuación y espacios duplicados usando la funcion definida concat() junto con transform(), unique() y erase().
 Finalmente se agrega un id que va aumentando conforme se pasa cada fila del csv, esto servirá para identificar cada película con mayor facilidad.
 
 ## Pseudocódigo de la inserción de datos
