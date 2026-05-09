@@ -112,3 +112,89 @@ No requiere lógica especial: como el Trie indexa director, cast y género con p
 
 ### Persistencia
 Los id de likes y ver-más-tarde se guardan en archivos de texto plano al salir y se recargan al iniciar. La pantalla de bienvenida muestra la lista de "Ver más tarde" y una vista previa de recomendaciones basadas en los likes históricos.
+
+## Interfaz
+Por el momento se estará controlando el funcionamiento de la aplicación mediante la terminal (cmd) usando el código en el archivo interfaz.cpp
+
+Sin embargo se planea que para la entrega final la aplicación tenga una apariencia similar a este mockup hecho en Figma:
+
+<img width="1280" height="720" alt="Frame 1" src="https://github.com/user-attachments/assets/97e0775b-c455-40b2-9e14-5aced69f6031" />
+
+### Visualización actual en terminal:
+```
+Pantalla principal:
+
+==== PLATAFORMA STREAMING ====
+
+1. Buscar película
+2. Ver "Ver más tarde"
+3. Ver recomendaciones
+4. Salir
+
+Seleccione opción: 
+
+Opción 1:
+
+Ingrese palabra/frase/tag:
+> barco 
+
+Output:
+
+
+1. Piratas del Caribe
+2. Barco Fantasma
+3. ...
+4. ...
+5. ...
+
+6. Siguientes 5
+0. Volver 
+
+Si elige una película (ejemplo: la 1):
+
+=== Piratas del Caribe ===
+[Sinopsis aquí]
+
+1. Like 
+2. Ver más tarde 
+3. Volver 
+
+Si elige 6. Siguientes:
+
+1. Pelicula 6
+2. Pelicula 7
+3. ...
+4. ...
+5. ...
+
+6. Siguientes 5
+0. Volver 
+
+Opción 2: VER “VER MÁS TARDE”
+
+=== VER MÁS TARDE ===
+
+1. Película A
+2. Película B
+...
+
+Seleccione una película o 0 para volver: 
+→ Si selecciona:
+Mostrar sinopsis
+Opciones (igual que antes)
+
+Opción 3: RECOMENDACIONES
+
+=== RECOMENDACIONES ===
+
+Basado en tus Likes:
+
+1. Película similar A
+2. Película similar B
+... 
+
+Opción 4: SALIR
+
+Guardar datos (likes, ver más tarde)
+Terminar programa
+```
