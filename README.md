@@ -26,7 +26,7 @@ Finalmente se agrega un id que va aumentando conforme se pasa cada fila del csv,
 ```
 struct TrieNode {
     TrieNode* hijos[128]
-    Set<string> peliculas 
+    Set<int> id_peliculas 
 }
 clase SuffixTrie {
 privado:
@@ -63,16 +63,21 @@ void insertarSufijosDePalabra(string palabra, string titulo) {
             si nodoActual->hijos[indice] == nullptr:
                 nodoActual->hijos[indice] = new TrieNode()
             nodoActual = nodoActual->hijos[indice]       
-        nodoActual->peliculas.insertar(titulo)
+        nodoActual->id_peliculas.insertar(id)
     }
 void insertarTexto(string textoFuente, string tituloPrincipal) {
-    textoLimpio = normalizar(textoFuente)
+	partes = dividir linea por '$'
+	si partes.longitud != 2: regresar
+	
+    textoLimpio = normalizar(partes[0])
+	id_pelicula = int(partes[1])
+	
     palabras = dividir textoLimpio por ' '
     para cada palabra en palabras:
         si palabra.longitud < 2: continuar
-        insertarSufijosDePalabra(palabra, tituloPrincipal)
+        insertarSufijosDePalabra(palabra, id_pelicula)
     }
-Set<string> buscar(string consulta) {
+Set<int> buscar(string consulta) {
     consulta = normalizar(consulta)
     nodoActual = raiz
     para cada caracter c en consulta:
@@ -82,11 +87,11 @@ Set<string> buscar(string consulta) {
         nodoActual = nodoActual->hijos[indice]
     return recolectarNodos(nodoActual)
     }
-Set<string> recolectarNodos(TrieNode* nodo){
+Set<int> recolectarNodos(TrieNode* nodo){
     resultado = Set(nodo->peliculas)
     para cada hijo en nodo->hijos:
         si hijo != nullptr:
-            resultado = resultado merge(recolectarNodos(hijo))
+            resultado = resultado.merge(recolectarNodos(hijo))
     return resultado	
     }
 }
