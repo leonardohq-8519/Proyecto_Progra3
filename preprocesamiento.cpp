@@ -7,6 +7,11 @@
 using namespace std;
 
 bool process_movie_data(const string& input_filename, const string& output_filename) {
+    /*
+     * El archivo de input_filename se llama "wiki_movie_plots_deduped.csv"
+     * El archivo de output_filename se llama "movies.txt"
+     * Ambos nombres son puestos en la interfaz, pero se hace la aclaración como comentario
+     */
     ifstream inputFile(input_filename);
     ofstream outputFile(output_filename);
     string line;
