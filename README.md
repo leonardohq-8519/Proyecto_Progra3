@@ -56,7 +56,8 @@ string normalizar(string texto) {
 void insertarSufijosDePalabra(string palabra, string titulo) {
     n = palabra.longitud
     para i desde 0 hasta n - 1:
-        nodoActual = raiz            
+        nodoActual = raiz
+		sufijo = palabra.subcadena(i, n)            
         para cada caracter c en sufijo:
             indice = (int) c
             si nodoActual->hijos[indice] == nullptr:
@@ -79,9 +80,9 @@ Set<string> buscar(string consulta) {
         si nodoActual->hijos[indice] == nullptr:
             return SetVacio()
         nodoActual = nodoActual->hijos[indice]
-    return nodoActual->peliculas
+    return recolectarNodos(nodoActual)
     }
-	Set<string> recolectarNodos(TrieNode nodo){
+Set<string> recolectarNodos(TrieNode* nodo){
     resultado = Set(nodo->peliculas)
     para cada hijo en nodo->hijos:
         si hijo != nullptr:
