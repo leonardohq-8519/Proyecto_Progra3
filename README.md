@@ -93,7 +93,7 @@ Set<int> buscar(string consulta) {
     return recolectarNodos(nodoActual)
     }
 Set<int> recolectarNodos(TrieNode* nodo){
-    resultado = Set(nodo->peliculas)
+    resultado = Set(nodo->id_peliculas)
     para cada hijo en nodo->hijos:
         si hijo != nullptr:
             resultado = resultado.merge(recolectarNodos(hijo))
