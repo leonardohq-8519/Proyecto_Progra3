@@ -100,15 +100,38 @@ Set<int> recolectarNodos(TrieNode* nodo){
     return resultado	
     }
 }
+
+void cargarDesdeTXT(SuffixTrie& trie, string nombreArchivo) {
+    archivo = abrir(nombreArchivo)
+    si archivo no abre: regresar error
+    mientras haya líneas en archivo:
+        linea = leerLineaCompleta()   // formato: "texto_concatenado$id"
+        trie.insertarTexto(linea)
+    cerrar archivo
+}
+
+int main() {
+    SuffixTrie buscarPelicula
+    cargarDesdeTXT(buscarPelicula, "movies.txt")
+    string busqueda = "bar"
+    resultados = buscarPelicula.buscar(busqueda)   // Set<int> de ids
+    si resultados no está vacío:
+        imprimir "Se encontraron las siguientes películas:"
+        para cada id en resultados:
+            imprimir "- " + peliculas[id].titulo
+    sino:
+        imprimir "No se encontraron coincidencias para: " + busqueda
+    regresar 0
+}
 ```
 
 ## Explicacion del funcionamiento
-
 El programa se divide en dos fases: un pre-procesamiento que se ejecuta una sola vez y la plataforma interactiva que usa el usuario.
-En la fase de pre-procesamiento se lee el archivo wiki_movie_plots_deduped.csv mediante la función process_movie_data y se genera un archivo .txt intermedio con los datos limpios. El parser (parse_data) respeta las comillas dobles del CSV para que las comas internas no rompan las filas, se descarta la columna de URL de Wikipedia por no aportar a la búsqueda, y los campos relevantes se concatenan y normalizan con concat() junto con transform(), unique() y erase() (minúsculas, sin puntuación, sin espacios duplicados). Al final de cada línea se agrega un id incremental que identifica de forma única a cada película, separado del texto por el carácter $, formato que luego consume directamente la función insertarTexto del Trie.
+En la fase de pre-procesamiento se lee el archivo wiki_movie_plots_deduped.csv mediante la función process_movie_data y se genera un archivo intermedio movies.txt con los datos limpios. El parser (parse_data) respeta las comillas dobles del CSV para que las comas internas no rompan las filas, se descarta la columna de URL de Wikipedia por no aportar a la búsqueda, y los campos relevantes se concatenan y normalizan con concat() junto con transform(), unique() y erase() (minúsculas, sin puntuación, sin espacios duplicados). Al final de cada línea se agrega un id incremental que identifica de forma única a cada película, separado del texto por el carácter $, formato que luego consume directamente la función insertarTexto del Trie.
 
 ## Carga e indexación
 Al iniciar la plataforma, cada película se almacena en un vector indexado por su id y simultáneamente su texto normalizado se inserta en un Trie de sufijos. El Trie no guarda los datos completos de la película, solo los id en el conjunto id_peliculas de cada nodo, lo que mantiene la estructura liviana.
+
 Se eligió un Trie de sufijos porque el enunciado exige búsqueda por sub-palabra (ej. "bar" debe encontrar "barco"), cosa que un Trie clásico de prefijos no resuelve. Al insertar cada palabra se insertan también todos sus sufijos (insertarSufijosDePalabra), de modo que cualquier sub-palabra aparece como prefijo de algún sufijo y se encuentra con un descenso estándar en O(m) sobre la longitud de la consulta. Se descartan las palabras de longitud menor a 2 para no saturar el Trie con tokens irrelevantes.
 
 ## Búsqueda
