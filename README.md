@@ -9,7 +9,7 @@ Joseph Paulo Geraldo Soto
 
 Rafaella Ariana Cano Ramos
 
-Emily Alessandra Chacon Ttito
+Emily Alessandra Chacón Ttito
 
 Leonardo Julian Huanay Quiroz
 
@@ -28,6 +28,7 @@ struct TrieNode {
     TrieNode* hijos[128]
     Set<int> id_peliculas 
 }
+
 clase SuffixTrie {
 privado:
 TrieNode* raiz
@@ -44,6 +45,7 @@ raiz = new TrieNode()
 Destructor() {
 destruir(raiz)
 }
+
 string normalizar(string texto) {
     resultado = ""
     para cada caracter c en texto:
@@ -53,6 +55,7 @@ string normalizar(string texto) {
             resultado += ' '
     return resultado
 }
+
 void insertarSufijosDePalabra(string palabra, string titulo) {
     n = palabra.longitud
     para i desde 0 hasta n - 1:
@@ -65,6 +68,7 @@ void insertarSufijosDePalabra(string palabra, string titulo) {
             nodoActual = nodoActual->hijos[indice]       
         nodoActual->id_peliculas.insertar(id)
     }
+
 void insertarTexto(string textoFuente, string tituloPrincipal) {
 	partes = dividir linea por '$'
 	si partes.longitud != 2: regresar
@@ -77,6 +81,7 @@ void insertarTexto(string textoFuente, string tituloPrincipal) {
         si palabra.longitud < 2: continuar
         insertarSufijosDePalabra(palabra, id_pelicula)
     }
+
 Set<int> buscar(string consulta) {
     consulta = normalizar(consulta)
     nodoActual = raiz
