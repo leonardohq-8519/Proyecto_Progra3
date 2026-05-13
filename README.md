@@ -56,7 +56,7 @@ string normalizar(string texto) {
     return resultado
 }
 
-void insertarSufijosDePalabra(string palabra, string titulo) {
+void insertarSufijosDePalabra(string palabra, string id_pelicula) {
     n = palabra.longitud
     para i desde 0 hasta n - 1:
         nodoActual = raiz
@@ -66,10 +66,10 @@ void insertarSufijosDePalabra(string palabra, string titulo) {
             si nodoActual->hijos[indice] == nullptr:
                 nodoActual->hijos[indice] = new TrieNode()
             nodoActual = nodoActual->hijos[indice]       
-        nodoActual->id_peliculas.insertar(id)
+        nodoActual->id_peliculas.insertar(id_pelicula)
     }
 
-void insertarTexto(string textoFuente, string tituloPrincipal) {
+void insertarTexto(string textoFuente) {
 	partes = dividir linea por '$'
 	si partes.longitud != 2: regresar
 	
