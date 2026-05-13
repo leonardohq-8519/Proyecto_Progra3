@@ -105,7 +105,7 @@ void cargarDesdeTXT(SuffixTrie& trie, string nombreArchivo) {
     archivo = abrir(nombreArchivo)
     si archivo no abre: regresar error
     mientras haya líneas en archivo:
-        linea = leerLineaCompleta()   // formato: "texto_concatenado$id"
+        linea = leerLineaCompleta()  
         trie.insertarTexto(linea)
     cerrar archivo
 }
@@ -114,7 +114,7 @@ int main() {
     SuffixTrie buscarPelicula
     cargarDesdeTXT(buscarPelicula, "movies.txt")
     string busqueda = "bar"
-    resultados = buscarPelicula.buscar(busqueda)   // Set<int> de ids
+    resultados = buscarPelicula.buscar(busqueda)  
     si resultados no está vacío:
         imprimir "Se encontraron las siguientes películas:"
         para cada id en resultados:
