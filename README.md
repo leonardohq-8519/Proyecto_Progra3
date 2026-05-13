@@ -60,8 +60,8 @@ void insertarSufijosDePalabra(string palabra, string titulo) {
     n = palabra.longitud
     para i desde 0 hasta n - 1:
         nodoActual = raiz
-		sufijo = palabra.subcadena(i, n)            
-        para cada caracter c en sufijo:
+		para cada j desde i hasta n-1:
+			c = palabra[ j ]
             indice = (int) c
             si nodoActual->hijos[indice] == nullptr:
                 nodoActual->hijos[indice] = new TrieNode()
