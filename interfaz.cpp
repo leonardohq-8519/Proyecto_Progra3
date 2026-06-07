@@ -8,22 +8,21 @@
 
 using namespace std;
 
-// ===== ESTRUCTURA BASE =====
+// ESTRUCTURA BASE
+
 struct Pelicula {
     string titulo;
     string sinopsis;
     vector<string> tags;
 };
 
-// ===== BASE DE DATOS =====
+// BASE DE DATOS
+
 vector<Pelicula> baseDatos;
 vector<Pelicula> verMasTarde;
 vector<Pelicula> likes;
 
-
-// ============================================================
 // PATRON 1 - PROXY: Cache de búsquedas recurrentes con map
-// ============================================================
 
 class BuscadorReal {
 public:
@@ -68,10 +67,7 @@ public:
     }
 };
 
-
-// ============================================================
 // PATRON 2 - DECORATOR: Tipos de usuario
-// ============================================================
 
 class IUsuario {
 public:
@@ -116,10 +112,7 @@ public:
     string getTipo() override { return "Premium (catalogo completo)"; }
 };
 
-
-// ============================================================
 // PATRON 3 - ITERATOR: Recorre el catálogo en orden alfabético
-// ============================================================
 
 class CatalogoIterator {
 private:
@@ -140,10 +133,7 @@ public:
     size_t total()       const { return peliculasOrdenadas.size(); }
 };
 
-
-// ============================================================
 // PATRON 4 - MEMENTO: Historial de búsquedas (deshacer)
-// ============================================================
 
 struct BusquedaMemento {
     string query;
@@ -167,14 +157,13 @@ public:
 };
 
 
-// ===== INSTANCIAS GLOBALES =====
+// INSTANCIAS GLOBALES
 BuscadorProxy    proxy;
 HistorialBusquedas historial;
 IUsuario*        usuarioActual = nullptr;
 
 
-// ===== FUNCIONES DE INTERFAZ =====
-
+// FUNCIONES DE INTERFAZ
 void cargarDatos() {
     cout << "Cargando datos...\n";
 
@@ -256,3 +245,131 @@ void mostrarResultados(const string& query, const vector<Pelicula>& resultados) 
     }
 }
 
+void buscarPeliculas() {
+    auto catalogo = usuarioActual->getCatalogo(baseDatos);
+
+    string query;
+    cout << "\nIngrese busqueda (0 para cancelar): ";
+    cin.ignore();
+    getline(cin, query);
+    if (query == "0") return;
+
+    // PROXY: usa cache si la búsqueda ya se realizó antes
+    auto resultados = proxy.buscar(query, catalogo);
+
+    // MEMENTO: guarda el estado de esta búsqueda
+    historial.guardar(query, resultados);
+
+    mostrarResultados(query, resultados);
+
+    // MEMENTO: opción de deshacer para volver a la búsqueda anterior
+    if (historial.puedeDeshacer()) {
+        cout << "\n[MEMENTO] Desea volver a la busqueda anterior? (1=Si / 0=No): ";
+        int op;
+        cin >> op;
+        if (op == 1) {
+            auto previo = historial.deshacer();
+            cout << "[MEMENTO] Restaurando busqueda: \"" << previo.query << "\"\n";
+            mostrarResultados(previo.query, previo.resultados);
+        }
+    }
+}
+
+void verMasTardeMenu() {
+    cout << "\n=== VER MAS TARDE ===\n";
+    if (verMasTarde.empty()) {
+        cout << "Tu lista esta vacia.\n";
+        return;
+    }
+    for (int i = 0; i < (int)verMasTarde.size(); i++)
+        cout << i + 1 << ". " << verMasTarde[i].titulo << "\n";
+
+    cout << "0. Volver\nOpcion: ";
+    int op;
+    cin >> op;
+    if (op > 0 && op <= (int)verMasTarde.size())
+        mostrarPelicula(verMasTarde[op - 1]);
+}
+
+void verRecomendaciones() {
+    cout << "\n=== RECOMENDACIONES ===\n";
+    auto catalogo = usuarioActual->getCatalogo(baseDatos);
+    for (const auto& p : catalogo)
+        cout << "- " << p.titulo << "\n";
+}
+
+void verCatalogoAlfabetico() {
+    // ITERATOR: recorre el catálogo ordenado alfabéticamente
+    auto catalogo = usuarioActual->getCatalogo(baseDatos);
+    CatalogoIterator it(catalogo);
+
+    cout << "\n=== CATALOGO COMPLETO (Orden Alfabetico) ===\n";
+    cout << "Total: " << it.total() << " peliculas\n\n";
+
+    while (it.hasNext()) {
+        Pelicula p = it.next();
+        cout << "[" << it.posicion() << "/" << it.total() << "] " << p.titulo << "\n";
+
+        cout << "1=Ver detalles | 2=Siguiente | 0=Salir al menu\nOpcion: ";
+        int op;
+        cin >> op;
+
+        if (op == 0) return;
+        if (op == 1) mostrarPelicula(p);
+        // op == 2: el bucle continúa automáticamente
+    }
+
+    cout << "\nFin del catalogo.\n";
+}
+
+IUsuario* seleccionarTipoUsuario() {
+    cout << "\n=== BIENVENIDO A LA PLATAFORMA DE STREAMING ===\n";
+    cout << "Seleccione su tipo de cuenta:\n";
+    cout << "1. Usuario Basico  (acceso a catalogo reducido - 20 peliculas)\n";
+    cout << "2. Usuario Premium (acceso al catalogo completo)\n";
+    cout << "Opcion: ";
+
+    int op;
+    cin >> op;
+
+    if (op == 2) {
+        cout << "[DECORATOR] Cuenta Premium activada - acceso completo al catalogo\n";
+        return new UsuarioPremium(new UsuarioBase());
+    }
+    cout << "[DECORATOR] Cuenta Basica activada - catalogo reducido a 20 peliculas\n";
+    return new UsuarioBasico(new UsuarioBase());
+}
+
+void menuPrincipal() {
+    int op;
+
+    do {
+        cout << "\n==== PLATAFORMA STREAMING ====\n";
+        cout << "Usuario: " << usuarioActual->getTipo() << "\n";
+        cout << "1. Buscar pelicula\n";
+        cout << "2. Ver 'Ver mas tarde'\n";
+        cout << "3. Ver recomendaciones\n";
+        cout << "4. Ver catalogo alfabetico\n";
+        cout << "5. Salir\n";
+        cout << "Opcion: ";
+        cin >> op;
+
+        switch (op) {
+            case 1: buscarPeliculas();        break;
+            case 2: verMasTardeMenu();        break;
+            case 3: verRecomendaciones();     break;
+            case 4: verCatalogoAlfabetico();  break;
+            case 5: guardarDatos();           break;
+            default: cout << "Opcion invalida\n";
+        }
+
+    } while (op != 5);
+}
+
+int main() {
+    cargarDatos();
+    usuarioActual = seleccionarTipoUsuario();
+    menuPrincipal();
+    delete usuarioActual;
+    return 0;
+}
