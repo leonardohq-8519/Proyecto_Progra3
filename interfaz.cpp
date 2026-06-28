@@ -6,33 +6,34 @@
 #include <vector>
 #include <string>
 #include "preprocesamiento.h"
+#include "trie.h"
 
 using namespace std;
-
-// ===== ESTRUCTURA BASE =====
-struct Pelicula {
-    string titulo;
-    string sinopsis;
-    vector<string> tags;
-};
 
 // ===== BASE DE DATOS =====
 vector<Pelicula> baseDatos;
 vector<Pelicula> verMasTarde;
 vector<Pelicula> likes;
+unordered_map<int,Pelicula*> movies_titles;
+SuffixTrie suffixTrie;
 
 // ===== FUNCIONES =====
 void cargarDatos() {
     cout << "Cargando datos...\n";
     // TODO: leer CSV y llenar baseDatos
     // Se tendrá otro archivo con la estructura de datos (Trie)
-
-    if (process_movie_data("wiki_movie_plots_deduped.csv","movies.txt")) {
+    movies_titles = process_movie_data("wiki_movie_plots_deduped.csv","movies.txt");
+    if (!movies_titles.empty()) {
         cout << "Los datos se preprocesaron correctamente!" << std::endl;
     } else {
         cout << "Hubo un error al preprocesar los datos." << std::endl;
     }
 
+    if (suffixTrie.loadfromTXT("movies.txt")) {
+        cout << "Datos cargados al Trie correctamente" << std::endl;
+    } else {
+        cout << "Hubo un error al cargar los datos." << std::endl;
+    }
 }
 
 void guardarDatos() {
@@ -59,13 +60,12 @@ void buscarPeliculas() {
     getline(cin, query);
 
     // TODO: usar árbol para buscar
+    vector<int> index_resultados = suffixTrie.search(query);
     vector<Pelicula> resultados;
 
     // mock
-    for (auto &p : baseDatos) {
-        if (p.titulo.find(query) != string::npos) {
-            resultados.push_back(p);
-        }
+    for (int index : index_resultados) {
+        resultados.push_back(*(movies_titles[index]));
     }
 
     int pagina = 0;

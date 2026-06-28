@@ -4,27 +4,43 @@
 #include <string>
 #include <vector>
 #include "preprocesamiento.h"
+
 using namespace std;
 
-bool process_movie_data(const string& input_filename, const string& output_filename) {
+unordered_map<int,Pelicula*> process_movie_data(const string& input_filename, const string& output_filename) {
     /*
      * El archivo de input_filename se llama "wiki_movie_plots_deduped.csv"
      * El archivo de output_filename se llama "movies.txt"
      * Ambos nombres son puestos en la interfaz, pero se hace la aclaración como comentario
      */
+    unordered_map<int,Pelicula*> movies_titles;
+
     ifstream inputFile(input_filename);
     ofstream outputFile(output_filename);
     string line;
     if (!inputFile.is_open()) {
         cout << "Error opening file" << endl;
-        return 1;
+        return movies_titles;
     }
     string headers;
     getline(inputFile, headers);
-
+    cout << headers << endl;
     int id = 0;
     while (getline(inputFile, line)) {
+
+        int quote_count = count(line.begin(), line.end(), '"');
+        while (quote_count % 2 != 0) {
+            string next_line;
+            if (!getline(inputFile, next_line)) break;
+            line += " " + next_line;
+            quote_count += count(next_line.begin(), next_line.end(), '"');
+        }
+
         vector<string> raw_data = parse_data(line);
+        movies_titles[id] = new Pelicula();
+        movies_titles[id]->titulo = raw_data[1];
+        movies_titles[id]->sinopsis = raw_data[7];
+
         string raw_text = concat(raw_data, " ");
         transform(raw_text.begin(), raw_text.end(), raw_text.begin(), [](unsigned char c) {
             if (ispunct(c)) return (int)' ';
@@ -44,7 +60,7 @@ bool process_movie_data(const string& input_filename, const string& output_filen
     }
     inputFile.close();
     outputFile.close();
-    return true;
+    return movies_titles;
 }
 
 vector<string> parse_data(const string& line) {
@@ -78,6 +94,7 @@ string concat(vector<string>& v1, const string& sep ) {
     result.reserve(total_size);
     for (size_t i = 0; i < v1.size(); ++i) {
         if (i == 6) continue;
+        if (i != 7 && (v1[i] == "unknown" || v1[i] == "Unknown")) continue;
         result += v1[i];
         if (i < v1.size()-1 && !sep.empty()) result += sep;
     }
