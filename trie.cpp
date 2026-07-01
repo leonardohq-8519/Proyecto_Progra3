@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <set>
 #include <thread>
+#include <unordered_set>
 
 using namespace std;
 
@@ -76,7 +77,7 @@ void SuffixTrie::insertWordSuffixes(string word, int movie_id) {
             }
             node = node->children[index];
         }
-        node->movies_id.insert(movie_id);
+        node->movies_id.push_back(movie_id);
     }
 }
 
@@ -110,7 +111,7 @@ vector<int> SuffixTrie::search(string query) {
     if (words.empty()) return vector<int>();
 
     size_t n = words.size();
-    vector<set<int>> results(n);
+    vector<vector<int>> results(n);
     vector<bool> found(n, true);
 
     parallel_for(0, n, [&](size_t i) {
@@ -131,25 +132,27 @@ vector<int> SuffixTrie::search(string query) {
         if (!f) return vector<int>();
     }
 
-    set<int> finalResult = results[0];
+    vector<int> finalResult = results[0];
     for (size_t i = 1; i < n; i++) {
-        set<int> intersection;
-        set_intersection(finalResult.begin(), finalResult.end(),
-                          results[i].begin(), results[i].end(),
-                          inserter(intersection, intersection.begin()));
+        unordered_set<int> lookup(finalResult.begin(), finalResult.end());
+        vector<int> intersection;
+
+        for (int num : results[i]) {
+            if (lookup.erase(num)) intersection.push_back(num);
+        }
         finalResult = intersection;
     }
 
     return vector<int>(finalResult.begin(), finalResult.end());
 }
 
-set<int> SuffixTrie::fetchNodes(TrieNode* node) {
-    set<int> result;
-    result = set<int>(node->movies_id);
+vector<int> SuffixTrie::fetchNodes(TrieNode* node) {
+    vector<int> result;
+    result = vector<int>(node->movies_id);
     for (TrieNode* children : node->children) {
         if (children != nullptr) {
-            set<int> childResults = fetchNodes(children);
-            result.merge(childResults);
+            vector<int> childResults = fetchNodes(children);
+            result.insert(result.end(), childResults.begin(), childResults.end());
         }
     }
     return result;

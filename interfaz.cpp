@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_set>
+
 #include "preprocesamiento.h"
 #include "trie.h"
 
@@ -61,10 +63,11 @@ void buscarPeliculas() {
 
     // TODO: usar árbol para buscar
     vector<int> index_resultados = suffixTrie.search(query);
+    unordered_set<int> index_no_rep(index_resultados.begin(), index_resultados.end());
     vector<Pelicula> resultados;
 
     // mock
-    for (int index : index_resultados) {
+    for (int index : index_no_rep) {
         resultados.push_back(*(movies_titles[index]));
     }
 

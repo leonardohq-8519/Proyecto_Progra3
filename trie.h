@@ -15,7 +15,7 @@ using namespace std;
 
 struct TrieNode {
     TrieNode* children[128];
-    set<int> movies_id;
+    vector<int> movies_id;
 };
 
 class SuffixTrie {
@@ -28,7 +28,7 @@ class SuffixTrie {
     void insertWordSuffixes(string word, int movie_id);
     void insertText(string text);
     vector<int> search(string query);
-    set<int> fetchNodes(TrieNode* node);
+    vector<int> fetchNodes(TrieNode* node);
     bool loadfromTXT(string fileName);
 };
 #endif //PROYECTO_PROGRA3_TRIE_H
