@@ -6,34 +6,26 @@
 #include <fstream>
 #include "preprocesamiento.h"
 #include <chrono>
+#include <unordered_set>
+
+#include "trie.h"
 using namespace std;
 
 vector<Pelicula> baseDatos;
 vector<Pelicula> verMasTarde;
 vector<Pelicula> likes;
-
+unordered_map<int,Pelicula*> movies_titles;
+SuffixTrie suffixTrie;
 
 class BuscadorReal {
 public:
     vector<Pelicula> buscar(const string& query, const vector<Pelicula>& bd) {
+        vector<int> index_resultados = suffixTrie.search(query);
+        unordered_set<int> index_no_rep(index_resultados.begin(), index_resultados.end());
         vector<Pelicula> resultados;
-        string q = query;
-        transform(q.begin(), q.end(), q.begin(), ::tolower);
 
-        for (const auto& p : bd) {
-            string titulo = p.titulo;
-            transform(titulo.begin(), titulo.end(), titulo.begin(), ::tolower);
-            bool enTitulo = titulo.find(q) != string::npos;
-
-            bool enTag = false;
-            for (const auto& t : p.tags) {
-                string tag = t;
-                transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
-                if (tag.find(q) != string::npos) { enTag = true; break; }
-            }
-
-            if (enTitulo || enTag)
-                resultados.push_back(p);
+        for (int index : index_no_rep) {
+            resultados.push_back(*(movies_titles[index]));
         }
         return resultados;
     }
@@ -67,7 +59,14 @@ public:
 class UsuarioBase : public IUsuario {
 public:
     vector<Pelicula> getCatalogo(const vector<Pelicula>& todas) override {
-        return todas;
+        vector<Pelicula> catalogo;
+        catalogo.reserve(movies_titles.size());
+
+        for (const auto& [key, value] : movies_titles) {
+            catalogo.push_back(*value);
+        }
+
+        return catalogo;
     }
     string getTipo() override { return "Invitado"; }
 };
@@ -151,41 +150,21 @@ IUsuario*        usuarioActual = nullptr;
 void cargarDatos() {
     cout << "Cargando datos...\n";
 
-    process_movie_data("wiki_movie_plots_deduped.csv", "movies.txt");
+    movies_titles = process_movie_data("wiki_movie_plots_deduped.csv", "movies.txt");
 
-    ifstream archivo("wiki_movie_plots_deduped.csv");
-    if (!archivo.is_open()) {
-        cout << "Error: no se pudo abrir el csv\n";
-        return;
+    if (!movies_titles.empty()) {
+        cout << "Los datos se preprocesaron correctamente!" << std::endl;
+    } else {
+        cout << "Hubo un error al preprocesar los datos." << std::endl;
     }
 
-    string linea;
-    getline(archivo, linea);
-
-    while (getline(archivo, linea)) {
-        int quote_count = count(linea.begin(), linea.end(), '"');
-        while (quote_count % 2 != 0) {
-            string next_line;
-            if (!getline(archivo, next_line)) break;
-            linea += " " + next_line;
-            quote_count += count(next_line.begin(), next_line.end(), '"');
-        }
-        vector<string> campos = parse_data(linea);
-        if (campos.size() < 8) continue;
-
-        Pelicula p;
-        p.titulo   = campos[1];
-        p.sinopsis = campos[7];
-        if (!campos[2].empty()) p.tags.push_back(campos[2]); // Origen
-        if (!campos[3].empty()) p.tags.push_back(campos[3]); // Director
-        if (!campos[4].empty()) p.tags.push_back(campos[4]); // Cast
-        if (!campos[5].empty()) p.tags.push_back(campos[5]); // Genero
-
-        baseDatos.push_back(p);
+    cout << "Cargando datos al Suffix Trie... \n";
+    if (suffixTrie.loadfromTXT("movies.txt")) {
+        cout << "Datos cargados al Trie correctamente" << std::endl;
+    } else {
+        cout << "Hubo un error al cargar los datos." << std::endl;
     }
-    archivo.close();
-
-    cout << "Se cargaron " << baseDatos.size() << " peliculas.\n";
+    cout << "Se cargaron " << movies_titles.size() << " peliculas.\n";
 }
 
 void guardarDatos() {
@@ -280,8 +259,24 @@ void verMasTardeMenu() {
 void verRecomendaciones() {
     cout << "\n=== RECOMENDACIONES ===\n";
     auto catalogo = usuarioActual->getCatalogo(baseDatos);
-    for (const auto& p : catalogo)
-        cout << "- " << p.titulo << "\n";
+    unordered_set<string> tags;
+    int likes_count = 0;
+    for (const auto& pelicula : likes) {
+        if (likes_count > 4) {
+            break;
+        }
+        for (const string& tag : pelicula.tags) {
+            tags.insert(tag);
+        }
+        likes_count++;
+    }
+    for (const auto& p : catalogo) {
+        bool has_tag = any_of(p.tags.begin(), p.tags.end(), [&tags](const string& tag) {
+            return tags.contains(tag);
+        });
+        if (has_tag) cout << "- " << p.titulo << "\n";
+    }
+    //TODO: Configurar CatalogoIterador para que se muestre más ordenado.
 }
 
 void verCatalogoAlfabetico() {

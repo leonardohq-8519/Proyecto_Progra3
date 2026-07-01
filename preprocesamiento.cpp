@@ -79,6 +79,10 @@ unordered_map<int,Pelicula*> process_movie_data(const string& input_filename, co
         Pelicula* p = new Pelicula();
         p->titulo = raw_data[1];
         p->sinopsis = raw_data[7];
+        p->tags.push_back(!raw_data[2].empty() ? raw_data[2] : "NULL"); // Origen
+        p->tags.push_back(!raw_data[3].empty() ? raw_data[3] : "NULL"); // Director
+        p->tags.push_back(!raw_data[4].empty() ? raw_data[4] : "NULL"); // Cast
+        p->tags.push_back(!raw_data[5].empty() ? raw_data[5] : "NULL");
         peliculas[i] = p;
 
         string raw_text = concat(raw_data, " ");
