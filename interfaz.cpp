@@ -116,7 +116,7 @@ void verRecomendaciones() {
 }
 
 void menuPrincipal() {
-    int op;
+    char op;
 
     do {
         cout << "\n==== PLATAFORMA STREAMING ====\n";
@@ -128,14 +128,14 @@ void menuPrincipal() {
         cin >> op;
 
         switch (op) {
-            case 1: buscarPeliculas(); break;
-            case 2: verMasTardeMenu(); break;
-            case 3: verRecomendaciones(); break;
-            case 4: guardarDatos(); break;
+            case '1': buscarPeliculas(); break;
+            case '2': verMasTardeMenu(); break;
+            case '3': verRecomendaciones(); break;
+            case '4': guardarDatos(); break;
             default: cout << "Opcion invalida\n";
         }
 
-    } while (op != 4);
+    } while (op != '4');
 }
 
 int main() {
