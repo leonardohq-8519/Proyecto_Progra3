@@ -1,0 +1,19 @@
+# Dataset (grande, no se versiona)
+wiki_movie_plots_deduped.csv
+movies.txt
+
+# Build C++
+cmake-build-*/
+build/
+*.o
+*.obj
+*.exe
+interfaz
+Preprocesamiento
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.log
+frontend/public/movies.json
+frontend/public/plots/

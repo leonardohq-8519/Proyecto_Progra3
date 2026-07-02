@@ -1,0 +1,112 @@
+import { useEffect, useRef, useState } from 'react';
+import { MovieCard } from '../components/MovieCard';
+import { useMovieModal } from '../context/MovieModalContext';
+import { useAccount } from '../context/AccountContext';
+import { api } from '../services/api';
+import { buscadorProxy } from '../patterns/SearchProxy';
+import { CatalogoIterator } from '../patterns/CatalogoIterator';
+import { HistorialBusquedas } from '../patterns/HistorialBusquedas';
+import type { Movie } from '../types';
+
+const LOTE = 10;
+
+export function SearchPage() {
+  const { openMovie } = useMovieModal();
+  const { aplicarCatalogo, tipoCuenta } = useAccount();
+  const [query, setQuery] = useState('');
+  const [visibleResults, setVisibleResults] = useState<Movie[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [searched, setSearched] = useState(false);
+
+  const iteratorRef = useRef<CatalogoIterator | null>(null);
+  const historialRef = useRef(new HistorialBusquedas());
+  const skipNextSearch = useRef(false);
+
+  const mostrarDesdeIterador = (resultados: Movie[]) => {
+    iteratorRef.current = new CatalogoIterator(resultados);
+    setVisibleResults(iteratorRef.current.siguientes(LOTE));
+  };
+
+  useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
+      return;
+    }
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setVisibleResults([]);
+      setSearched(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      api
+        .search(trimmed)
+        .catch(() => buscadorProxy.buscar(trimmed))
+        .then((data) => {
+          if (cancelled) return;
+          const resultados = aplicarCatalogo(data);
+          historialRef.current.guardar(trimmed, resultados);
+          setCanUndo(historialRef.current.puedeDeshacer());
+          setSearched(true);
+          mostrarDesdeIterador(resultados);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [query]);
+
+  const cargarSiguientes = () => {
+    if (!iteratorRef.current) return;
+    setVisibleResults((prev) => [...prev, ...iteratorRef.current!.siguientes(LOTE)]);
+  };
+
+  const deshacerBusqueda = () => {
+    const previo = historialRef.current.deshacer();
+    setCanUndo(historialRef.current.puedeDeshacer());
+    skipNextSearch.current = true;
+    setQuery(previo.query);
+    mostrarDesdeIterador(previo.resultados);
+  };
+
+  const hayMasResultados = (iteratorRef.current?.hasNext() ?? false);
+
+  return (
+    <div className="search-page">
+      <input
+        className="search-input"
+        type="search"
+        placeholder="Buscar por título, director, género..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        autoFocus
+      />
+
+      <p className="search-hint">
+        Cuenta {tipoCuenta === 'basico' ? 'Básica (máx. 20 resultados)' : 'Premium (catálogo completo)'}
+      </p>
+
+      {searched && visibleResults.length === 0 && (
+        <p className="empty-state">Sin resultados para "{query}"</p>
+      )}
+
+      <div className="movie-grid">
+        {visibleResults.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} onSelect={openMovie} />
+        ))}
+      </div>
+
+      <div className="search-actions">
+        {hayMasResultados && (
+          <button onClick={cargarSiguientes}>Siguientes {LOTE}</button>
+        )}
+        {canUndo && <button onClick={deshacerBusqueda}>Deshacer búsqueda anterior</button>}
+      </div>
+    </div>
+  );
+}
