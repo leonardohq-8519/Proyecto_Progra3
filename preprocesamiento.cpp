@@ -3,31 +3,60 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <thread>
 #include "preprocesamiento.h"
 
 using namespace std;
 
+template <typename Func>
+void parallel_for(size_t begin, size_t end, Func&& func) {
+    size_t total = end - begin;
+    if (total == 0) return;
+
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // fallback si no se puede detectar
+    num_threads = std::min<size_t>(num_threads, total);
+
+    size_t chunk_size = total / num_threads;
+    size_t remainder   = total % num_threads;
+
+    std::vector<std::thread> threads;
+    size_t start = begin;
+    for (unsigned int t = 0; t < num_threads; ++t) {
+        size_t extra = (t < remainder) ? 1 : 0;
+        size_t stop = start + chunk_size + extra;
+        threads.emplace_back([start, stop, &func]() {
+            for (size_t i = start; i < stop; ++i) func(i);
+        });
+        start = stop;
+    }
+    for (auto& th : threads) th.join();
+}
+
 unordered_map<int,Pelicula*> process_movie_data(const string& input_filename, const string& output_filename) {
+    unordered_map<int,Pelicula*> movies_titles;
+
     /*
      * El archivo de input_filename se llama "wiki_movie_plots_deduped.csv"
      * El archivo de output_filename se llama "movies.txt"
      * Ambos nombres son puestos en la interfaz, pero se hace la aclaración como comentario
      */
-    unordered_map<int,Pelicula*> movies_titles;
 
     ifstream inputFile(input_filename);
     ofstream outputFile(output_filename);
-    string line;
     if (!inputFile.is_open()) {
         cout << "Error opening file" << endl;
         return movies_titles;
     }
+
     string headers;
     getline(inputFile, headers);
     cout << headers << endl;
-    int id = 0;
-    while (getline(inputFile, line)) {
 
+    // --- Fase 1: lectura secuencial (obligatoria por las comillas multilínea) ---
+    vector<string> raw_lines;
+    string line;
+    while (getline(inputFile, line)) {
         int quote_count = count(line.begin(), line.end(), '"');
         while (quote_count % 2 != 0) {
             string next_line;
@@ -35,11 +64,26 @@ unordered_map<int,Pelicula*> process_movie_data(const string& input_filename, co
             line += " " + next_line;
             quote_count += count(next_line.begin(), next_line.end(), '"');
         }
+        raw_lines.push_back(move(line));
+    }
+    inputFile.close();
 
-        vector<string> raw_data = parse_data(line);
-        movies_titles[id] = new Pelicula();
-        movies_titles[id]->titulo = raw_data[1];
-        movies_titles[id]->sinopsis = raw_data[7];
+    size_t n = raw_lines.size();
+    vector<Pelicula*> peliculas(n, nullptr);
+    vector<string> final_texts(n);
+
+    // --- Fase 2: procesamiento en paralelo (cada hilo escribe en su propio índice, sin choques) ---
+    parallel_for(0, n, [&](size_t i) {
+        vector<string> raw_data = parse_data(raw_lines[i]);
+
+        Pelicula* p = new Pelicula();
+        p->titulo = raw_data[1];
+        p->sinopsis = raw_data[7];
+        p->tags.push_back(!raw_data[2].empty() ? raw_data[2] : "NULL"); // Origen
+        p->tags.push_back(!raw_data[3].empty() ? raw_data[3] : "NULL"); // Director
+        p->tags.push_back(!raw_data[4].empty() ? raw_data[4] : "NULL"); // Cast
+        p->tags.push_back(!raw_data[5].empty() ? raw_data[5] : "NULL");
+        peliculas[i] = p;
 
         string raw_text = concat(raw_data, " ");
         transform(raw_text.begin(), raw_text.end(), raw_text.begin(), [](unsigned char c) {
@@ -54,12 +98,16 @@ unordered_map<int,Pelicula*> process_movie_data(const string& input_filename, co
             raw_text.pop_back();
         }
 
-        string final_text = raw_text + '$' + to_string(id) + "\n";
-        outputFile << final_text;
-        id++;
+        final_texts[i] = raw_text + '$' + to_string(i) + "\n";
+    });
+
+    // --- Fase 3: escritura secuencial (mantiene el orden y evita condiciones de carrera en I/O) ---
+    for (size_t i = 0; i < n; ++i) {
+        outputFile << final_texts[i];
+        movies_titles[static_cast<int>(i)] = peliculas[i];
     }
-    inputFile.close();
     outputFile.close();
+
     return movies_titles;
 }
 
