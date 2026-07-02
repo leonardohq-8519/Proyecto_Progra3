@@ -15,5 +15,7 @@ Preprocesamiento
 frontend/node_modules/
 frontend/dist/
 frontend/*.log
-frontend/public/movies.json
-frontend/public/plots/
+
+# frontend/public/movies.json y frontend/public/plots/ SÍ se versionan:
+# es el catálogo generado que Vercel necesita para servir el sitio,
+# ya que el CSV fuente no está en el repo (ver arriba).
