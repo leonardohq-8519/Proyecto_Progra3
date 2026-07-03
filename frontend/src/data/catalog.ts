@@ -1,4 +1,5 @@
 import type { Movie } from '../types';
+import type { Genero } from './genres';
 
 type CatalogRow = [string, string | null, string | null, string | null, string | null] | null;
 
@@ -76,6 +77,17 @@ export async function searchCatalog(query: string): Promise<Movie[]> {
       movie.director?.toLowerCase().includes(q) ||
       movie.releaseInfo?.toLowerCase().includes(q),
   );
+}
+
+// Devuelve las películas cuyo género (releaseInfo) coincide con alguna palabra
+// clave del género elegido. Usado por los filtros por género en la búsqueda.
+export async function searchByGenre(genero: Genero): Promise<Movie[]> {
+  const catalog = await loadCatalog();
+  return catalog.filter((movie) => {
+    const g = movie.releaseInfo?.toLowerCase();
+    if (!g) return false;
+    return genero.keywords.some((kw) => g.includes(kw));
+  });
 }
 
 export async function getMoviesByIds(ids: number[]): Promise<Movie[]> {

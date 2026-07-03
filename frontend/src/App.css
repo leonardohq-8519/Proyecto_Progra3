@@ -213,6 +213,61 @@
   border-color: #9ca3af;
 }
 
+.genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.genre-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #3a3a42;
+  background: transparent;
+  color: #d1d5db;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.genre-chip:hover {
+  border-color: #9ca3af;
+  color: #fff;
+}
+
+.genre-chip.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Buscador de la pantalla principal */
+.home-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.home-search .search-input {
+  max-width: 420px;
+}
+
+.home-search-button {
+  padding: 0 22px;
+  border-radius: 6px;
+  border: none;
+  background: #e50914;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home-search-button:hover {
+  background: #f6121d;
+}
+
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
