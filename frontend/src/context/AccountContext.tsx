@@ -21,7 +21,10 @@ const SESSION_KEY = 'streaming.sesion';
 interface AccountContextValue {
   estaAutenticado: boolean;
   tipoCuenta: TipoCuenta | null;
+  esPremium: boolean;
   usuarioActual: IUsuario | null;
+  limiteCatalogo: number;
+  limiteRecomendaciones: number;
   iniciarSesion: (usuario: string, contrasena: string) => boolean;
   cerrarSesion: () => void;
   obtenerPremium: () => void;
@@ -52,7 +55,10 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return {
       estaAutenticado: tipoCuenta !== null,
       tipoCuenta,
+      esPremium: tipoCuenta === 'premium',
       usuarioActual: usuario,
+      limiteCatalogo: usuario ? usuario.getLimiteCatalogo() : Number.POSITIVE_INFINITY,
+      limiteRecomendaciones: usuario ? usuario.getLimiteRecomendaciones() : 12,
       iniciarSesion: (usuarioIngresado, contrasenaIngresada) => {
         const cuenta = CUENTAS_DEMO.find(
           (c) => c.usuario === usuarioIngresado && c.contrasena === contrasenaIngresada,

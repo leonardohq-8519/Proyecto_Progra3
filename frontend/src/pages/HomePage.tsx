@@ -3,18 +3,23 @@ import { MovieRow } from '../components/MovieRow';
 import { useMovieList } from '../hooks/useMovieList';
 import { useMovieModal } from '../context/MovieModalContext';
 import { useUserLibrary } from '../context/UserLibraryContext';
+import { useAccount } from '../context/AccountContext';
 import { api } from '../services/api';
 import { getMoviesByIds, getRecommendations } from '../data/catalog';
 
 export function HomePage() {
   const { openMovie } = useMovieModal();
   const { watchLaterIds, likedIds } = useUserLibrary();
+  const { limiteRecomendaciones } = useAccount();
 
   const getWatchLater = useCallback(() => api.getWatchLater(), []);
   const getWatchLaterFallback = useCallback(() => getMoviesByIds(watchLaterIds), [watchLaterIds]);
 
   const getRecommendationsRemote = useCallback(() => api.getRecommendations(), []);
-  const getRecommendationsFallback = useCallback(() => getRecommendations(likedIds, 8), [likedIds]);
+  const getRecommendationsFallback = useCallback(
+    () => getRecommendations(likedIds, limiteRecomendaciones),
+    [likedIds, limiteRecomendaciones],
+  );
 
   const { movies: watchLater } = useMovieList(getWatchLater, getWatchLaterFallback);
   const { movies: recommendations } = useMovieList(getRecommendationsRemote, getRecommendationsFallback);

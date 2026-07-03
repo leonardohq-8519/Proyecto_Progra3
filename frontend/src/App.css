@@ -219,10 +219,33 @@
   gap: 16px;
 }
 
-.search-hint {
+.search-summary {
   margin: -12px 0 0;
+}
+
+.search-hint {
+  margin: 0;
   font-size: 13px;
   color: #9ca3af;
+}
+
+.search-hint strong {
+  color: #f3f4f6;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #e50914;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: #f6121d;
 }
 
 .search-actions {

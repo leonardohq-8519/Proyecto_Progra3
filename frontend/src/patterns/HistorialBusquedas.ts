@@ -10,6 +10,8 @@ export class HistorialBusquedas {
   private historial: BusquedaMemento[] = [];
 
   guardar(query: string, resultados: Movie[]): void {
+    const ultima = this.historial[this.historial.length - 1];
+    if (ultima && ultima.query === query) return; // no duplicar la misma búsqueda seguida
     this.historial.push({ query, resultados });
   }
 

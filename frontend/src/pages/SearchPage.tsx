@@ -12,9 +12,11 @@ const LOTE = 10;
 
 export function SearchPage() {
   const { openMovie } = useMovieModal();
-  const { aplicarCatalogo, tipoCuenta } = useAccount();
+  const { aplicarCatalogo, esPremium, obtenerPremium } = useAccount();
   const [query, setQuery] = useState('');
   const [visibleResults, setVisibleResults] = useState<Movie[]>([]);
+  const [totalReal, setTotalReal] = useState(0);
+  const [totalPermitido, setTotalPermitido] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -22,8 +24,13 @@ export function SearchPage() {
   const historialRef = useRef(new HistorialBusquedas());
   const skipNextSearch = useRef(false);
 
-  const mostrarDesdeIterador = (resultados: Movie[]) => {
-    iteratorRef.current = new CatalogoIterator(resultados);
+  const mostrarBusqueda = (resultados: Movie[]) => {
+    // Patrón Decorator: la cuenta (Básico/Premium) limita el catálogo visible.
+    const permitidos = aplicarCatalogo(resultados);
+    setTotalReal(resultados.length);
+    setTotalPermitido(permitidos.length);
+    // Patrón Iterator: paginamos los resultados permitidos de a LOTE.
+    iteratorRef.current = new CatalogoIterator(permitidos);
     setVisibleResults(iteratorRef.current.siguientes(LOTE));
   };
 
@@ -42,24 +49,25 @@ export function SearchPage() {
 
     let cancelled = false;
     const timeout = setTimeout(() => {
+      // Patrón Proxy: cachea resultados por query si el backend HTTP no responde.
       api
         .search(trimmed)
         .catch(() => buscadorProxy.buscar(trimmed))
         .then((data) => {
           if (cancelled) return;
-          const resultados = aplicarCatalogo(data);
-          historialRef.current.guardar(trimmed, resultados);
+          // Patrón Memento: guardamos cada búsqueda para poder deshacerla.
+          historialRef.current.guardar(trimmed, data);
           setCanUndo(historialRef.current.puedeDeshacer());
           setSearched(true);
-          mostrarDesdeIterador(resultados);
+          mostrarBusqueda(data);
         });
-    }, 250);
+    }, 300);
 
     return () => {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [query]);
+  }, [query, aplicarCatalogo]);
 
   const cargarSiguientes = () => {
     if (!iteratorRef.current) return;
@@ -71,10 +79,11 @@ export function SearchPage() {
     setCanUndo(historialRef.current.puedeDeshacer());
     skipNextSearch.current = true;
     setQuery(previo.query);
-    mostrarDesdeIterador(previo.resultados);
+    mostrarBusqueda(previo.resultados);
   };
 
-  const hayMasResultados = (iteratorRef.current?.hasNext() ?? false);
+  const hayMasResultados = iteratorRef.current?.hasNext() ?? false;
+  const estaLimitado = !esPremium && totalReal > totalPermitido;
 
   return (
     <div className="search-page">
@@ -87,9 +96,24 @@ export function SearchPage() {
         autoFocus
       />
 
-      <p className="search-hint">
-        Cuenta {tipoCuenta === 'basico' ? 'Básica (máx. 20 resultados)' : 'Premium (catálogo completo)'}
-      </p>
+      {searched && (
+        <div className="search-summary">
+          {estaLimitado ? (
+            <p className="search-hint">
+              Mostrando <strong>{totalPermitido}</strong> de <strong>{totalReal.toLocaleString()}</strong>{' '}
+              resultados · límite de cuenta Básica.{' '}
+              <button className="link-button" onClick={obtenerPremium}>
+                Obtené Premium para verlos todos
+              </button>
+            </p>
+          ) : (
+            <p className="search-hint">
+              <strong>{totalReal.toLocaleString()}</strong> resultado{totalReal === 1 ? '' : 's'}
+              {esPremium ? ' · cuenta Premium (catálogo completo)' : ''}
+            </p>
+          )}
+        </div>
+      )}
 
       {searched && visibleResults.length === 0 && (
         <p className="empty-state">Sin resultados para "{query}"</p>
@@ -102,9 +126,7 @@ export function SearchPage() {
       </div>
 
       <div className="search-actions">
-        {hayMasResultados && (
-          <button onClick={cargarSiguientes}>Siguientes {LOTE}</button>
-        )}
+        {hayMasResultados && <button onClick={cargarSiguientes}>Siguientes {LOTE}</button>}
         {canUndo && <button onClick={deshacerBusqueda}>Deshacer búsqueda anterior</button>}
       </div>
     </div>
